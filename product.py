@@ -37,7 +37,7 @@ class Product(ABC):
         pass
 
     @abstractmethod
-    def display_information(self) -> str:
+    def display_information(self) -> None:
         pass
 
     @abstractmethod

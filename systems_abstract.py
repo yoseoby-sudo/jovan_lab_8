@@ -8,13 +8,13 @@ from order import Order
 
 
 def select_supplier(inventory):
-    if not inventory._suppliers:
+    if not inventory.suppliers:
         print("No suppliers available. Please add a supplier first.")
         return None
 
     print("\nAvailable Suppliers")
 
-    for supplier in inventory._suppliers:
+    for supplier in inventory.suppliers:
         print(supplier.display_information())
 
     while True:
@@ -26,7 +26,6 @@ def select_supplier(inventory):
             return supplier
 
         print("Supplier not found. Please try again.")
-        
 
 # Handles user input and validation for adding a physical or digital product with a supplier association
 def handle_add_product(inventory):
@@ -290,11 +289,6 @@ def handle_create_order(inventory, orders):
 def main():
     inventory = Inventory()
     inventory.load_from_file()
-    suppliers = []
-    for product in inventory._products:
-        if product.supplier:
-            if not any(s.supplier_id == product.supplier.supplier_id for s in suppliers):
-                suppliers.append(product.supplier)
     orders = []
 
     print("\n========================================================")
@@ -319,13 +313,13 @@ def main():
         if option == "1":
             inventory.display_all()
         elif option == "2":
-            handle_add_product(inventory, suppliers)
+            handle_add_product(inventory)
         elif option == "3":
             handle_update_stock(inventory)
         elif option == "4":
             handle_search_product(inventory)
         elif option == "5":
-            handle_add_supplier(suppliers)
+            handle_add_supplier(inventory)
         elif option == "6":
             handle_create_order(inventory, orders)
         elif option == "7":

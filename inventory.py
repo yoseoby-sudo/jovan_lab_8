@@ -96,7 +96,11 @@ class Inventory:
         """Compatibility method for existing code."""
         return self.find_supplier(supplier_id)
 
+    @property
+    def suppliers(self) -> list[Supplier]:
+        return self._suppliers
 
+    
     def load_from_file(self, filename: str = "inventory.json") -> None:
         """Loads suppliers, products, and transactions from JSON."""
 
