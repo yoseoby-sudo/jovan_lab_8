@@ -1,0 +1,54 @@
+{
+    "inventory": [
+        {
+            "type": "physical",
+            "id": 1001,
+            "name": "Mechanical Keyboard",
+            "price": 120.0,
+            "stock": 15,
+            "weight": 0.9
+        },
+        {
+            "type": "digital",
+            "id": 1002,
+            "name": "Python Coding E-Book",
+            "price": 29.99,
+            "stock": 100,
+            "download_size": 15.5
+        },
+        {
+            "type": "physical",
+            "id": 1003,
+            "name": "Mouse",
+            "price": 75.0,
+            "stock": 4,
+            "weight": 0.2
+        },
+        {
+            "type": "digital",
+            "id": 1004,
+            "name": "Digital Cookbook",
+            "price": 50.0,
+            "stock": 4,
+            "download_size": 80.0
+        }
+    ],
+    "transaction_history": [
+        {
+            "product_id": 1001,
+            "amount": 15
+        },
+        {
+            "product_id": 1002,
+            "amount": 100
+        },
+        {
+            "product_id": 1003,
+            "amount": 4
+        },
+        {
+            "product_id": 1004,
+            "amount": 4
+        }
+    ]
+}

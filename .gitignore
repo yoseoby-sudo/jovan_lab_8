@@ -1,0 +1,10 @@
+# Python cache files
+__pycache__/
+*.pyc
+
+# IDE configurations (VS Code / PyCharm)
+.vscode/
+.idea/
+
+# OS-specific files (optional, e.g., Mac Finder files)
+.DS_Store
