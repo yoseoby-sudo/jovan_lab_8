@@ -1,50 +1,45 @@
 from abc import ABC, abstractmethod
+from supplier import Supplier
 
-# Abstract base class representing a generic product
 class Product(ABC):
-
-    def __init__(self, product_id, name, price, stock):
+    def __init__(self, product_id: int, name: str, price: float, stock: int, supplier: Supplier):
         self._product_id = product_id
         self._name = name
         self._price = price
         self._stock = stock
+        self._supplier: Supplier = supplier
 
     @property
-    def product_id(self):
+    def product_id(self) -> int:
         return self._product_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def price(self):
+    def price(self) -> float:
         return self._price
 
     @property
-    def stock(self):
+    def stock(self) -> int:
         return self._stock
 
-    def update_stock(self, quantity):
-        # Updates the stock quantity securely through a method
+    @property
+    def supplier(self) -> Supplier:
+        return self._supplier
+
+    def update_stock(self, quantity: int) -> None:
         self._stock += quantity
 
-    def display_information(self):
-        # Displays formatted common product information
-        print(
-            f"ID: {self._product_id} | "
-            f"Name: {self._name} | "
-            f"Price: ${self._price:.2f} | "
-            f"Stock: {self._stock}",
-            end=" | "
-        )
-
     @abstractmethod
-    def get_fulfilment_info(self):
-        # Abstract method to define fulfilment details
+    def get_fulfilment_info(self) -> str:
         pass
 
     @abstractmethod
-    def to_dict(self):
-        # Abstract method to convert product to dictionary for JSON persistence
+    def display_information(self) -> str:
+        pass
+
+    @abstractmethod
+    def to_dict(self) -> dict:
         pass
