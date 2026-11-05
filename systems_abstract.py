@@ -3,91 +3,157 @@ from product import Product
 from physical_product import PhysicalProduct
 from digital_product import DigitalProduct
 from shipping import CanBeShipped
+from supplier import Supplier
+from order import Order
 
-# Handles user input and validation for adding a physical or digital product
+
+def select_supplier(inventory):
+    if not inventory._suppliers:
+        print("No suppliers available. Please add a supplier first.")
+        return None
+
+    print("\nAvailable Suppliers")
+
+    for supplier in inventory._suppliers:
+        print(supplier.display_information())
+
+    while True:
+        supplier_id = input("Enter Supplier ID: ").strip()
+
+        supplier = inventory.search_supplier(supplier_id)
+
+        if supplier:
+            return supplier
+
+        print("Supplier not found. Please try again.")
+        
+
+# Handles user input and validation for adding a physical or digital product with a supplier association
 def handle_add_product(inventory):
     print("\nAdd New Product")
-    
+
+    # 1. Select product type
     while True:
-        prod_type = input("Product Type (1: Physical, 2: Digital): ").strip()
-        if prod_type in ["1", "2"]:
+        product_type = input("Enter product type (physical/digital): ").strip().lower()
+
+        if product_type in ["physical", "digital"]:
             break
-        print("Invalid choice. Please enter 1 for Physical or 2 for Digital.")
 
+        print("Invalid product type. Please enter physical or digital.")
+
+    # 2. Enter product ID
     while True:
-        product_id_input = input("Product ID: ").strip()
         try:
-            product_id = int(product_id_input)
+            product_id = int(input("Product ID: "))
+
+            if inventory.search_product(product_id):
+                print("Product ID already exists.")
+                continue
+
+            break
+
         except ValueError:
-            print("Product ID must be a number.")
-            continue
+            print("Please enter a valid numeric product ID.")
 
-        if inventory.search_product(product_id) is not None:
-            print("Product ID already exists.")
-            continue
-        break
-
+    # 3. Enter product name
     while True:
         product_name = input("Product Name: ").strip()
-        if product_name == "":
-            print("Product name cannot be empty.")
-            continue
-        break
 
-    while True:
-        price_input = input("Price: ")
-        try:
-            price = float(price_input)
-        except ValueError:
-            print("Price must be a number.")
-            continue
-        if price < 0:
-            print("Price cannot be negative.")
-            continue
-        break
-
-    while True:
-        stock_input = input("Stock Quantity: ")
-        try:
-            stock = int(stock_input)
-        except ValueError:
-            print("Stock quantity must be a number.")
-            continue
-        if stock < 0:
-            print("Stock quantity cannot be negative.")
-            continue
-        break
-
-    if prod_type == "1":
-        while True:
-            weight_input = input("Weight (kg): ")
-            try:
-                weight = float(weight_input)
-            except ValueError:
-                print("Weight must be a number.")
-                continue
-            if weight < 0:
-                print("Weight cannot be negative.")
-                continue
+        if product_name:
             break
-        new_product = PhysicalProduct(product_id, product_name, price, stock, weight)
+
+        print("Product name cannot be empty.")
+
+    # 4. Enter product price
+    while True:
+        try:
+            price = float(input("Price: $"))
+
+            if price < 0:
+                print("Price cannot be negative.")
+                continue
+
+            break
+
+        except ValueError:
+            print("Please enter a valid price.")
+
+    # 5. Enter product stock
+    while True:
+        try:
+            stock = int(input("Stock Quantity: "))
+
+            if stock < 0:
+                print("Stock cannot be negative.")
+                continue
+
+            break
+
+        except ValueError:
+            print("Please enter a valid stock quantity.")
+
+    # 6. Select an existing supplier
+    supplier = select_supplier(inventory)
+
+    if supplier is None:
+        print("Product creation cancelled.")
+        return
+
+    # 7. Create the product based on its type
+    if product_type == "physical":
+
+        while True:
+            try:
+                weight = float(input("Product Weight (kg): "))
+
+                if weight <= 0:
+                    print("Weight must be greater than 0.")
+                    continue
+
+                break
+
+            except ValueError:
+                print("Please enter a valid weight.")
+
+        new_product = PhysicalProduct(
+            product_id,
+            product_name,
+            price,
+            stock,
+            weight,
+            supplier
+        )
+
     else:
-        while True:
-            size_input = input("Download Size (MB): ")
-            try:
-                download_size = float(size_input)
-            except ValueError:
-                print("Download size must be a number.")
-                continue
-            if download_size < 0:
-                print("Download size cannot be negative.")
-                continue
-            break
-        new_product = DigitalProduct(product_id, product_name, price, stock, download_size)
 
+        while True:
+            try:
+                download_size = float(input("Download Size (MB): "))
+
+                if download_size <= 0:
+                    print("Download size must be greater than 0.")
+                    continue
+
+                break
+
+            except ValueError:
+                print("Please enter a valid download size.")
+
+        new_product = DigitalProduct(
+            product_id,
+            product_name,
+            price,
+            stock,
+            download_size,
+            supplier
+        )
+
+    # 8. Add product and record transaction
     inventory.add_product(new_product)
     inventory.add_transaction(product_id, stock)
-    print("Product added successfully!")
+
+    print("\nProduct added successfully!")
+    print(f"Assigned Supplier: {supplier.name}")
 
 
 # Handles user input and logic for updating product stock
@@ -139,14 +205,100 @@ def handle_search_product(inventory):
 
         print("Product not found.")
 
+def handle_add_supplier(inventory):
+    print("\nAdd New Supplier")
 
-# Main application loop and menu controller
+    while True:
+        supplier_id = input("Supplier ID: ").strip()
+
+        if supplier_id == "":
+            print("Supplier ID cannot be empty.")
+            continue
+
+        if inventory.search_supplier(supplier_id):
+            print("Supplier ID already exists.")
+            continue
+
+        break
+
+    while True:
+        name = input("Supplier Name: ").strip()
+
+        if name == "":
+            print("Supplier name cannot be empty.")
+            continue
+
+        break
+
+    while True:
+        email = input("Contact Email: ").strip()
+
+        if email == "":
+            print("Email cannot be empty.")
+            continue
+
+        if "@" not in email:
+            print("Please enter a valid email.")
+            continue
+
+        break
+
+    new_supplier = Supplier(supplier_id, name, email)
+
+    inventory.add_supplier(new_supplier)
+
+    inventory.save_to_file()
+
+    print("Supplier added successfully!")
+
+def handle_create_order(inventory, orders):
+    if not inventory._products:
+        print("\nInventory is empty. Add products before creating an order.")
+        return
+    
+    order_id = input("Enter Order ID: ").strip()
+    new_order = Order(order_id)
+
+    while True:
+        inventory.display_all()
+        pid_input = input("Enter Product ID to add to order (or type 'done' to finish): ").strip()
+        if pid_input.lower() == 'done':
+            break
+        
+        try:
+            pid = int(pid_input)
+            product = inventory.search_product(pid)
+            if not product:
+                print("Product ID not found.")
+                continue
+            
+            qty = int(input(f"Enter quantity for {product.name}: "))
+            if qty <= 0:
+                print("Quantity must be greater than zero.")
+                continue
+                
+            # Order internally creates the OrderLine (Composition)
+            new_order.add_order_line(product, qty)
+            print(f"Added {qty}x {product.name} to order.")
+        except ValueError:
+            print("Invalid input.")
+
+    orders.append(new_order)
+    print(f"Order {order_id} created successfully! Total: ${new_order.calculate_total():.2f}")
+
+
 def main():
     inventory = Inventory()
     inventory.load_from_file()
+    suppliers = []
+    for product in inventory._products:
+        if product.supplier:
+            if not any(s.supplier_id == product.supplier.supplier_id for s in suppliers):
+                suppliers.append(product.supplier)
+    orders = []
 
     print("\n========================================================")
-    print("        INVENTORY MANAGEMENT SYSTEM (LAB 7)")
+    print("        INVENTORY & ORDER MANAGEMENT SYSTEM (LAB 8)")
     print("========================================================")
 
     while True:
@@ -155,27 +307,43 @@ def main():
         print("2. Add Product (Physical/Digital)")
         print("3. Update Stock")
         print("4. Search Product")
-        print("5. Save Inventory")
-        print("6. Exit")
+        print("5. Add New Supplier")
+        print("6. Create New Order")
+        print("7. View All Orders")
+        print("8. Save Inventory")
+        print("9. Exit")
         print("----------------------------")
 
-        option = input("Enter option: ")
+        option = input("Enter option: ").strip()
 
         if option == "1":
             inventory.display_all()
         elif option == "2":
-            handle_add_product(inventory)
+            handle_add_product(inventory, suppliers)
         elif option == "3":
             handle_update_stock(inventory)
         elif option == "4":
             handle_search_product(inventory)
         elif option == "5":
-            inventory.save_to_file()
+            handle_add_supplier(suppliers)
         elif option == "6":
-            print("Exiting Inventory Management System.")
+            handle_create_order(inventory, orders)
+        elif option == "7":
+            if not orders:
+                print("No orders recorded.")
+            else:
+                for order in orders:
+                    print(f"\nOrder ID: {order.order_id}")
+                    for line in order.order_lines:
+                        print(f"  - {line.product.name} x {line.quantity} = ${line.calculate_subtotal():.2f}")
+                    print(f"  Total: ${order.calculate_total():.2f}")
+        elif option == "8":
+            inventory.save_to_file()
+        elif option == "9":
+            print("Exiting System.")
             break
         else:
-            print("Invalid option. Please choose 1-6.")
+            print("Invalid option. Please choose 1-9.")
 
 
 if __name__ == "__main__":

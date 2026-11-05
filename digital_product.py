@@ -1,31 +1,29 @@
 from product import Product
+from supplier import Supplier
 
-# Represents a digital product that has a download size
 class DigitalProduct(Product):
-
-    def __init__(self, product_id, name, price, stock, download_size):
-        super().__init__(product_id, name, price, stock)
+    def __init__(self, product_id, name, price, stock, download_size, supplier):
+        super().__init__(product_id, name, price, stock, supplier)
         self._download_size = download_size
 
     @property
-    def download_size(self):
+    def download_size(self) -> float:
         return self._download_size
 
-    def display_information(self):
-        # Overrides parent display_information to include digital attributes
-        super().display_information()
-        print(f"Size: {self._download_size}MB | Fulfilment: {self.get_fulfilment_info()}")
+    def get_fulfilment_info(self) -> str:
+        return f"Digital item. Download size: {self._download_size}MB."
 
-    def get_fulfilment_info(self):
-        return "Delivered instantly via download link."
+    def display_information(self) -> str:
+        print(f"Product ID: {self._product_id} | Name: {self._name} | Price: ${self._price:.2f} | Stock: {self._stock} | Download Size: {self._download_size}MB")
+        print(f"  -> Supplier: {self._supplier.name} ({self._supplier.contact_email})")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "type": "digital",
             "id": self._product_id,
             "name": self._name,
             "price": self._price,
             "stock": self._stock,
-            "download_size": self._download_size
+            "weight": self._weight,
+            "supplier": self._supplier.to_dict() 
         }
-

@@ -1,94 +1,214 @@
 import os
 import json
+
 from product import Product
 from physical_product import PhysicalProduct
 from digital_product import DigitalProduct
 from shipping import CanBeShipped
+from supplier import Supplier
 
-# Responsible for managing a collection of products, transactions, and file persistence
+
+# Responsible for managing products, suppliers,
+# transactions, and file persistence.
 class Inventory:
 
-    def __init__(self):
-        self._products = []
-        self._transaction_history = []
+    def __init__(self) -> None:
+        self._products: list[Product] = []
+        self._transaction_history: list[dict[str, int]] = []
+        self._suppliers: list[Supplier] = []
 
-    def add_product(self, product):
-        # Adds a Product object to the inventory list
+ 
+    def add_product(self, product: Product) -> None:
+        """Adds a Product object to the inventory."""
         self._products.append(product)
 
-    def search_product(self, product_id):
-        # Searches for and returns a Product object by its ID, or None if not found
+
+    def find_product(self, product_id: int) -> Product | None:
+        """Finds and returns a product by its ID."""
         for product in self._products:
             if product.product_id == product_id:
                 return product
+
         return None
 
-    def display_all(self):
-        # Displays all products currently in the inventory
+
+    def search_product(self, product_id: int) -> Product | None:
+        """Compatibility method for existing code."""
+        return self.find_product(product_id)
+
+
+    def remove_product(self, product_id: int) -> bool:
+        """Removes a product from inventory using its ID."""
+        product = self.find_product(product_id)
+
+        if product is not None:
+            self._products.remove(product)
+            return True
+
+        return False
+
+
+    def display_all(self) -> None:
+        """Displays all products currently in inventory."""
         print("\nCurrent Inventory")
         print("-" * 80)
+
         if not self._products:
             print("No products in inventory.")
+
         else:
             for product in self._products:
                 product.display_information()
-                # If the product can be shipped, show its shipping cost
+
+                # Show shipping cost if the product supports shipping.
                 if isinstance(product, CanBeShipped):
-                    print(f"  -> Shipping Cost: ${product.calculate_shipping_cost():.2f}")
+                    print(
+                        f"  -> Shipping Cost: "
+                        f"${product.calculate_shipping_cost():.2f}"
+                    )
+
         print("-" * 80)
 
-    def add_transaction(self, product_id, amount):
-        # Records a transaction entry
+
+    def add_transaction(self, product_id: int, amount: int) -> None:
+        """Records a transaction entry."""
         self._transaction_history.append({
             "product_id": product_id,
             "amount": amount
         })
 
-    def load_from_file(self, filename="inventory.json"):
-        # Loads inventory data and transaction history from JSON file supporting subclasses
-        if os.path.exists(filename):
-            print(f"{filename} found.")
-            with open(filename, "r") as file:
-                data = json.load(file)
-            print("Inventory loaded successfully.")
 
-            raw_inventory = data.get("inventory", [])
-            self._transaction_history = data.get("transaction_history", [])
+    def add_supplier(self, supplier: Supplier) -> None:
+        """Adds a Supplier object to the supplier collection."""
+        self._suppliers.append(supplier)
+
+
+    def find_supplier(self, supplier_id: str) -> Supplier | None:
+        """Finds and returns a supplier using its ID."""
+        for supplier in self._suppliers:
+            if supplier.supplier_id == supplier_id:
+                return supplier
+
+        return None
+
+
+    def search_supplier(self, supplier_id: str) -> Supplier | None:
+        """Compatibility method for existing code."""
+        return self.find_supplier(supplier_id)
+
+
+    def load_from_file(self, filename: str = "inventory.json") -> None:
+        """Loads suppliers, products, and transactions from JSON."""
+
+        if not os.path.exists(filename):
+            print(
+                f"{filename} not found. "
+                "Starting with empty inventory."
+            )
 
             self._products = []
-            for item in raw_inventory:
-                prod_type = item.get("type")
-                if prod_type == "physical":
-                    product = PhysicalProduct(
-                        item["id"],
-                        item["name"],
-                        item["price"],
-                        item["stock"],
-                        item["weight"]
-                    )
-                elif prod_type == "digital":
-                    product = DigitalProduct(
-                        item["id"],
-                        item["name"],
-                        item["price"],
-                        item["stock"],
-                        item["download_size"]
-                    )
-                else:
-                    continue
-                self._products.append(product)
-        else:
-            print(f"{filename} not found. Starting with empty inventory.")
-            self._products = []
+            self._suppliers = []
             self._transaction_history = []
+            return
 
-    def save_to_file(self, filename="inventory.json"):
-        # Saves current inventory and transaction history to JSON file
-        raw_inventory = [product.to_dict() for product in self._products]
+        print(f"{filename} found.")
+
+        with open(filename, "r") as file:
+            data = json.load(file)
+
+        # Load transaction history.
+        self._transaction_history = data.get(
+            "transaction_history", []
+        )
+
+        # Load suppliers first so products can reference them.
+        self._suppliers = []
+
+        for item in data.get("suppliers", []):
+            supplier = Supplier(
+                item["supplier_id"],
+                item["name"],
+                item["contact_email"]
+            )
+
+            self.add_supplier(supplier)
+
+        # Load products and connect each product to its supplier.
+        self._products = []
+
+        for item in data.get("inventory", []):
+            supplier_id = item.get("supplier_id")
+
+            if supplier_id is None:
+                raise ValueError(
+                    f"Product {item['id']} is missing supplier_id "
+                    "in inventory.json."
+                )
+
+            supplier = self.find_supplier(supplier_id)
+
+            if supplier is None:
+                raise ValueError(
+                    f"Supplier {supplier_id} was not found "
+                    f"for product {item['id']}."
+                )
+
+            product_type = item.get("type")
+
+            if product_type == "physical":
+                product = PhysicalProduct(
+                    item["id"],
+                    item["name"],
+                    item["price"],
+                    item["stock"],
+                    item["weight"],
+                    supplier
+                )
+
+            elif product_type == "digital":
+                product = DigitalProduct(
+                    item["id"],
+                    item["name"],
+                    item["price"],
+                    item["stock"],
+                    item["download_size"],
+                    supplier
+                )
+
+            else:
+                continue
+
+            self.add_product(product)
+
+        print("Inventory loaded successfully.")
+
+
+    def save_to_file(self, filename: str = "inventory.json") -> None:
+        """Saves suppliers, products, and transactions to JSON."""
+
+        # Convert suppliers into dictionaries.
+        raw_suppliers = [
+            {
+                "supplier_id": supplier.supplier_id,
+                "name": supplier.name,
+                "contact_email": supplier.contact_email
+            }
+            for supplier in self._suppliers
+        ]
+
+        # Convert products into dictionaries.
+        raw_inventory = [
+            product.to_dict()
+            for product in self._products
+        ]
+
         data = {
             "inventory": raw_inventory,
+            "suppliers": raw_suppliers,
             "transaction_history": self._transaction_history
         }
+
         with open(filename, "w") as file:
             json.dump(data, file, indent=4)
+
         print("Inventory saved successfully!")
