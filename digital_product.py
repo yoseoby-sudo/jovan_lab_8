@@ -1,8 +1,19 @@
+
 from product import Product
 from supplier import Supplier
 
+
 class DigitalProduct(Product):
-    def __init__(self, product_id, name, price, stock, download_size, supplier):
+
+    def __init__(
+        self,
+        product_id: int,
+        name: str,
+        price: float,
+        stock: int,
+        download_size: float,
+        supplier: Supplier
+    ) -> None:
         super().__init__(product_id, name, price, stock, supplier)
         self._download_size = download_size
 
@@ -14,8 +25,19 @@ class DigitalProduct(Product):
         return f"Digital item. Download size: {self._download_size}MB."
 
     def display_information(self) -> None:
-        print(f"Product ID: {self._product_id} | Name: {self._name} | Price: ${self._price:.2f} | Stock: {self._stock} | Download Size: {self._download_size}MB")
-        print(f"  -> Supplier: {self._supplier.name} ({self._supplier.contact_email})")
+        print(
+            f"Product ID: {self._product_id} | "
+            f"Name: {self._name} | "
+            f"Price: ${self._price:.2f} | "
+            f"Stock: {self._stock} | "
+            f"Download Size: {self._download_size}MB"
+        )
+
+        print(
+            f"  -> Supplier: "
+            f"{self._supplier.name} "
+            f"({self._supplier.contact_email})"
+        )
 
     def to_dict(self) -> dict:
         return {
@@ -26,4 +48,4 @@ class DigitalProduct(Product):
             "stock": self._stock,
             "download_size": self._download_size,
             "supplier_id": self._supplier.supplier_id
-         }
+        }

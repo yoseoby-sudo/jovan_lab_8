@@ -1,3 +1,4 @@
+
 import os
 import json
 
@@ -17,11 +18,9 @@ class Inventory:
         self._transaction_history: list[dict[str, int]] = []
         self._suppliers: list[Supplier] = []
 
- 
     def add_product(self, product: Product) -> None:
         """Adds a Product object to the inventory."""
         self._products.append(product)
-
 
     def find_product(self, product_id: int) -> Product | None:
         """Finds and returns a product by its ID."""
@@ -31,11 +30,9 @@ class Inventory:
 
         return None
 
-
     def search_product(self, product_id: int) -> Product | None:
         """Compatibility method for existing code."""
         return self.find_product(product_id)
-
 
     def remove_product(self, product_id: int) -> bool:
         """Removes a product from inventory using its ID."""
@@ -47,7 +44,6 @@ class Inventory:
 
         return False
 
-
     def display_all(self) -> None:
         """Displays all products currently in inventory."""
         print("\nCurrent Inventory")
@@ -58,7 +54,11 @@ class Inventory:
 
         else:
             for product in self._products:
+                # Polymorphism: each subclass displays its own information.
                 product.display_information()
+
+                # Polymorphism: each subclass provides its own fulfilment info.
+                print(f"  -> Fulfilment: {product.get_fulfilment_info()}")
 
                 # Show shipping cost if the product supports shipping.
                 if isinstance(product, CanBeShipped):
@@ -69,7 +69,6 @@ class Inventory:
 
         print("-" * 80)
 
-
     def add_transaction(self, product_id: int, amount: int) -> None:
         """Records a transaction entry."""
         self._transaction_history.append({
@@ -77,11 +76,9 @@ class Inventory:
             "amount": amount
         })
 
-
     def add_supplier(self, supplier: Supplier) -> None:
         """Adds a Supplier object to the supplier collection."""
         self._suppliers.append(supplier)
-
 
     def find_supplier(self, supplier_id: str) -> Supplier | None:
         """Finds and returns a supplier using its ID."""
@@ -91,7 +88,6 @@ class Inventory:
 
         return None
 
-
     def search_supplier(self, supplier_id: str) -> Supplier | None:
         """Compatibility method for existing code."""
         return self.find_supplier(supplier_id)
@@ -100,7 +96,10 @@ class Inventory:
     def suppliers(self) -> list[Supplier]:
         return self._suppliers
 
-    
+    @property
+    def products(self) -> list[Product]:
+        return self._products
+
     def load_from_file(self, filename: str = "inventory.json") -> None:
         """Loads suppliers, products, and transactions from JSON."""
 
@@ -185,7 +184,6 @@ class Inventory:
             self.add_product(product)
 
         print("Inventory loaded successfully.")
-
 
     def save_to_file(self, filename: str = "inventory.json") -> None:
         """Saves suppliers, products, and transactions to JSON."""

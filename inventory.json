@@ -1,5 +1,11 @@
 {
     "inventory": [],
-    "suppliers": [],
+    "suppliers": [
+        {
+            "supplier_id": "1",
+            "name": "hexxor inc",
+            "contact_email": "hexxor@gmail.com"
+        }
+    ],
     "transaction_history": []
 }

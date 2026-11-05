@@ -1,5 +1,5 @@
+
 from inventory import Inventory
-from product import Product
 from physical_product import PhysicalProduct
 from digital_product import DigitalProduct
 from shipping import CanBeShipped
@@ -7,7 +7,7 @@ from supplier import Supplier
 from order import Order
 
 
-def select_supplier(inventory):
+def select_supplier(inventory: Inventory) -> Supplier | None:
     if not inventory.suppliers:
         print("No suppliers available. Please add a supplier first.")
         return None
@@ -27,13 +27,16 @@ def select_supplier(inventory):
 
         print("Supplier not found. Please try again.")
 
-# Handles user input and validation for adding a physical or digital product with a supplier association
-def handle_add_product(inventory):
+
+# Handles user input and validation for adding a physical or digital product.
+def handle_add_product(inventory: Inventory) -> None:
     print("\nAdd New Product")
 
     # 1. Select product type
     while True:
-        product_type = input("Enter product type (physical/digital): ").strip().lower()
+        product_type = input(
+            "Enter product type (physical/digital): "
+        ).strip().lower()
 
         if product_type in ["physical", "digital"]:
             break
@@ -127,7 +130,9 @@ def handle_add_product(inventory):
 
         while True:
             try:
-                download_size = float(input("Download Size (MB): "))
+                download_size = float(
+                    input("Download Size (MB): ")
+                )
 
                 if download_size <= 0:
                     print("Download size must be greater than 0.")
@@ -155,9 +160,10 @@ def handle_add_product(inventory):
     print(f"Assigned Supplier: {supplier.name}")
 
 
-# Handles user input and logic for updating product stock
-def handle_update_stock(inventory):
+# Handles user input and logic for updating product stock.
+def handle_update_stock(inventory: Inventory) -> None:
     product_id_input = input("Product ID: ")
+
     try:
         product_id = int(product_id_input)
     except ValueError:
@@ -165,8 +171,10 @@ def handle_update_stock(inventory):
         return
 
     product = inventory.search_product(product_id)
+
     if product:
         quantity_input = input("Stock Quantity to Add: ")
+
         try:
             quantity = int(quantity_input)
         except ValueError:
@@ -179,15 +187,18 @@ def handle_update_stock(inventory):
 
         product.update_stock(quantity)
         inventory.add_transaction(product_id, quantity)
+
         print("Stock updated successfully!")
+
     else:
         print("Product not found.")
 
 
-# Handles searching for a product by ID and displaying its details
-def handle_search_product(inventory):
+# Handles searching for a product by ID and displaying its details.
+def handle_search_product(inventory: Inventory) -> None:
     while True:
         product_id_input = input("Product ID to Search: ")
+
         try:
             product_id = int(product_id_input)
         except ValueError:
@@ -195,16 +206,23 @@ def handle_search_product(inventory):
             continue
 
         product = inventory.search_product(product_id)
+
         if product:
             print("\nProduct Found")
             product.display_information()
+
             if isinstance(product, CanBeShipped):
-                print(f"  -> Shipping Cost: ${product.calculate_shipping_cost():.2f}")
+                print(
+                    f"  -> Shipping Cost: "
+                    f"${product.calculate_shipping_cost():.2f}"
+                )
+
             break
 
         print("Product not found.")
 
-def handle_add_supplier(inventory):
+
+def handle_add_supplier(inventory: Inventory) -> None:
     print("\nAdd New Supplier")
 
     while True:
@@ -245,51 +263,68 @@ def handle_add_supplier(inventory):
     new_supplier = Supplier(supplier_id, name, email)
 
     inventory.add_supplier(new_supplier)
-
     inventory.save_to_file()
 
     print("Supplier added successfully!")
 
-def handle_create_order(inventory, orders):
-    if not inventory._products:
+
+def handle_create_order(
+    inventory: Inventory,
+    orders: list[Order]
+) -> None:
+
+    if not inventory.products:
         print("\nInventory is empty. Add products before creating an order.")
         return
-    
+
     order_id = input("Enter Order ID: ").strip()
     new_order = Order(order_id)
 
     while True:
         inventory.display_all()
-        pid_input = input("Enter Product ID to add to order (or type 'done' to finish): ").strip()
-        if pid_input.lower() == 'done':
+
+        pid_input = input(
+            "Enter Product ID to add to order (or type 'done' to finish): "
+        ).strip()
+
+        if pid_input.lower() == "done":
             break
-        
+
         try:
             pid = int(pid_input)
             product = inventory.search_product(pid)
+
             if not product:
                 print("Product ID not found.")
                 continue
-            
+
             qty = int(input(f"Enter quantity for {product.name}: "))
+
             if qty <= 0:
                 print("Quantity must be greater than zero.")
                 continue
-                
-            # Order internally creates the OrderLine (Composition)
+
+            # Order internally creates the OrderLine (Composition).
             new_order.add_order_line(product, qty)
+
             print(f"Added {qty}x {product.name} to order.")
+
         except ValueError:
             print("Invalid input.")
 
     orders.append(new_order)
-    print(f"Order {order_id} created successfully! Total: ${new_order.calculate_total():.2f}")
+
+    print(
+        f"Order {order_id} created successfully! "
+        f"Total: ${new_order.calculate_total():.2f}"
+    )
 
 
-def main():
+def main() -> None:
     inventory = Inventory()
     inventory.load_from_file()
-    orders = []
+
+    orders: list[Order] = []
 
     print("\n========================================================")
     print("        INVENTORY & ORDER MANAGEMENT SYSTEM (LAB 8)")
@@ -312,30 +347,45 @@ def main():
 
         if option == "1":
             inventory.display_all()
+
         elif option == "2":
             handle_add_product(inventory)
+
         elif option == "3":
             handle_update_stock(inventory)
+
         elif option == "4":
             handle_search_product(inventory)
+
         elif option == "5":
             handle_add_supplier(inventory)
+
         elif option == "6":
             handle_create_order(inventory, orders)
+
         elif option == "7":
             if not orders:
                 print("No orders recorded.")
+
             else:
                 for order in orders:
                     print(f"\nOrder ID: {order.order_id}")
+
                     for line in order.order_lines:
-                        print(f"  - {line.product.name} x {line.quantity} = ${line.calculate_subtotal():.2f}")
+                        print(
+                            f"  - {line.product.name} x {line.quantity} "
+                            f"= ${line.calculate_subtotal():.2f}"
+                        )
+
                     print(f"  Total: ${order.calculate_total():.2f}")
+
         elif option == "8":
             inventory.save_to_file()
+
         elif option == "9":
             print("Exiting System.")
             break
+
         else:
             print("Invalid option. Please choose 1-9.")
 
