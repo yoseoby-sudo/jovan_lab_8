@@ -1,7 +1,5 @@
-
 import os
 import json
-
 from product import Product
 from physical_product import PhysicalProduct
 from digital_product import DigitalProduct
@@ -20,6 +18,13 @@ class Inventory:
 
     def add_product(self, product: Product) -> None:
         """Adds a Product object to the inventory."""
+
+        if not isinstance(product, Product):
+            raise TypeError("Product must be a Product object.")
+
+        if self.find_product(product.product_id) is not None:
+            raise ValueError("A product with this ID already exists.")
+
         self._products.append(product)
 
     def find_product(self, product_id: int) -> Product | None:
@@ -78,6 +83,13 @@ class Inventory:
 
     def add_supplier(self, supplier: Supplier) -> None:
         """Adds a Supplier object to the supplier collection."""
+
+        if not isinstance(supplier, Supplier):
+            raise TypeError("Supplier must be a Supplier object.")
+
+        if self.find_supplier(supplier.supplier_id) is not None:
+            raise ValueError("A supplier with this ID already exists.")
+
         self._suppliers.append(supplier)
 
     def find_supplier(self, supplier_id: str) -> Supplier | None:
@@ -94,11 +106,11 @@ class Inventory:
 
     @property
     def suppliers(self) -> list[Supplier]:
-        return self._suppliers
+        return self._suppliers.copy()
 
     @property
     def products(self) -> list[Product]:
-        return self._products
+        return self._products.copy()
 
     def load_from_file(self, filename: str = "inventory.json") -> None:
         """Loads suppliers, products, and transactions from JSON."""
@@ -116,9 +128,22 @@ class Inventory:
 
         print(f"{filename} found.")
 
-        with open(filename, "r") as file:
-            data = json.load(file)
+        try:
+            with open(filename, "r") as file:
+                data = json.load(file)
 
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                f"Invalid JSON format in {filename}."
+            ) from error
+        
+        if not isinstance(data, dict):
+            raise ValueError("Inventory file must contain a JSON object.")
+
+        for key in ("inventory", "suppliers", "transaction_history"):
+            if not isinstance(data.get(key, []), list):
+                raise ValueError(f"'{key}' must contain a list.")
+        
         # Load transaction history.
         self._transaction_history = data.get(
             "transaction_history", []
@@ -128,6 +153,9 @@ class Inventory:
         self._suppliers = []
 
         for item in data.get("suppliers", []):
+            if not isinstance(item, dict):
+                raise ValueError("Each supplier record must be a JSON object.")
+
             supplier = Supplier(
                 item["supplier_id"],
                 item["name"],
@@ -140,11 +168,14 @@ class Inventory:
         self._products = []
 
         for item in data.get("inventory", []):
+            if not isinstance(item, dict):
+                raise ValueError("Each product record must be a JSON object.")
+
             supplier_id = item.get("supplier_id")
 
             if supplier_id is None:
                 raise ValueError(
-                    f"Product {item['id']} is missing supplier_id "
+                    f"Product {item.get('id', 'Unknown')} is missing supplier_id "
                     "in inventory.json."
                 )
 
@@ -179,7 +210,10 @@ class Inventory:
                 )
 
             else:
-                continue
+                raise ValueError(
+                    f"Unknown product type '{product_type}' "
+                    f"for product {item['id']}."
+                )
 
             self.add_product(product)
 

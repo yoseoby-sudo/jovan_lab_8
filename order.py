@@ -3,6 +3,9 @@ from order_line import OrderLine
 
 class Order:
     def __init__(self, order_id: str):
+        if not isinstance(order_id, str) or not order_id.strip():
+            raise ValueError("Order ID cannot be empty.")
+
         self._order_id: str = order_id
         self._order_lines: list[OrderLine] = []
 
@@ -12,7 +15,7 @@ class Order:
 
     @property
     def order_lines(self) -> list[OrderLine]:
-        return self._order_lines
+        return self._order_lines.copy()
 
     def add_order_line(self, product: Product, quantity: int) -> None:
         order_line = OrderLine(product, quantity)

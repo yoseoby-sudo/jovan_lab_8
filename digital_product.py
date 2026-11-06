@@ -1,4 +1,4 @@
-
+import math
 from product import Product
 from supplier import Supplier
 
@@ -15,6 +15,10 @@ class DigitalProduct(Product):
         supplier: Supplier
     ) -> None:
         super().__init__(product_id, name, price, stock, supplier)
+
+        if not isinstance(download_size, (int, float)) or isinstance(download_size, bool) or not math.isfinite(download_size) or download_size <= 0:
+            raise ValueError("Download size must be a valid positive number.")
+
         self._download_size = download_size
 
     @property

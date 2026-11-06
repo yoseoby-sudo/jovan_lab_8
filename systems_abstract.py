@@ -1,4 +1,4 @@
-
+import math
 from inventory import Inventory
 from physical_product import PhysicalProduct
 from digital_product import DigitalProduct
@@ -48,6 +48,10 @@ def handle_add_product(inventory: Inventory) -> None:
         try:
             product_id = int(input("Product ID: "))
 
+            if product_id <= 0:
+                print("Product ID must be a positive integer.")
+                continue
+
             if inventory.search_product(product_id):
                 print("Product ID already exists.")
                 continue
@@ -71,8 +75,8 @@ def handle_add_product(inventory: Inventory) -> None:
         try:
             price = float(input("Price: $"))
 
-            if price < 0:
-                print("Price cannot be negative.")
+            if not math.isfinite(price) or price < 0:
+                print("Price must be a valid non-negative number.")
                 continue
 
             break
@@ -102,62 +106,66 @@ def handle_add_product(inventory: Inventory) -> None:
         return
 
     # 7. Create the product based on its type
-    if product_type == "physical":
+    try:
+        if product_type == "physical":
 
-        while True:
-            try:
-                weight = float(input("Product Weight (kg): "))
+            while True:
+                try:
+                    weight = float(input("Product Weight (kg): "))
 
-                if weight <= 0:
-                    print("Weight must be greater than 0.")
-                    continue
+                    if not math.isfinite(weight) or weight <= 0:
+                        print("Weight must be a valid positive number.")
+                        continue
 
-                break
+                    break
 
-            except ValueError:
-                print("Please enter a valid weight.")
+                except ValueError:
+                    print("Please enter a valid weight.")
 
-        new_product = PhysicalProduct(
-            product_id,
-            product_name,
-            price,
-            stock,
-            weight,
-            supplier
-        )
+            new_product = PhysicalProduct(
+                product_id,
+                product_name,
+                price,
+                stock,
+                weight,
+                supplier
+            )
 
-    else:
+        else:
 
-        while True:
-            try:
-                download_size = float(
-                    input("Download Size (MB): ")
-                )
+            while True:
+                try:
+                    download_size = float(
+                        input("Download Size (MB): ")
+                    )
 
-                if download_size <= 0:
-                    print("Download size must be greater than 0.")
-                    continue
+                    if not math.isfinite(download_size) or download_size <= 0:
+                        print("Download size must be a valid positive number.")
+                        continue
 
-                break
+                    break
 
-            except ValueError:
-                print("Please enter a valid download size.")
+                except ValueError:
+                    print("Please enter a valid download size.")
 
-        new_product = DigitalProduct(
-            product_id,
-            product_name,
-            price,
-            stock,
-            download_size,
-            supplier
-        )
+            new_product = DigitalProduct(
+                product_id,
+                product_name,
+                price,
+                stock,
+                download_size,
+                supplier
+            )
 
-    # 8. Add product and record transaction
-    inventory.add_product(new_product)
-    inventory.add_transaction(product_id, stock)
+        # 8. Add product and record transaction
+        inventory.add_product(new_product)
+        inventory.add_transaction(product_id, stock)
 
-    print("\nProduct added successfully!")
-    print(f"Assigned Supplier: {supplier.name}")
+        print("\nProduct added successfully!")
+        print(f"Assigned Supplier: {supplier.name}")
+
+    except (ValueError, TypeError) as error:
+        print(f"Product could not be added: {error}")
 
 
 # Handles user input and logic for updating product stock.
@@ -185,10 +193,14 @@ def handle_update_stock(inventory: Inventory) -> None:
             print("Stock quantity cannot be negative.")
             return
 
-        product.update_stock(quantity)
-        inventory.add_transaction(product_id, quantity)
+        try:
+            product.update_stock(quantity)
+            inventory.add_transaction(product_id, quantity)
 
-        print("Stock updated successfully!")
+            print("Stock updated successfully!")
+
+        except (ValueError, TypeError) as error:
+            print(f"Stock update failed: {error}")
 
     else:
         print("Product not found.")
@@ -222,13 +234,14 @@ def handle_search_product(inventory: Inventory) -> None:
         print("Product not found.")
 
 
+# Handles adding a new supplier.
 def handle_add_supplier(inventory: Inventory) -> None:
     print("\nAdd New Supplier")
 
     while True:
         supplier_id = input("Supplier ID: ").strip()
 
-        if supplier_id == "":
+        if not supplier_id:
             print("Supplier ID cannot be empty.")
             continue
 
@@ -241,7 +254,7 @@ def handle_add_supplier(inventory: Inventory) -> None:
     while True:
         name = input("Supplier Name: ").strip()
 
-        if name == "":
+        if not name:
             print("Supplier name cannot be empty.")
             continue
 
@@ -250,7 +263,7 @@ def handle_add_supplier(inventory: Inventory) -> None:
     while True:
         email = input("Contact Email: ").strip()
 
-        if email == "":
+        if not email:
             print("Email cannot be empty.")
             continue
 
@@ -260,14 +273,22 @@ def handle_add_supplier(inventory: Inventory) -> None:
 
         break
 
-    new_supplier = Supplier(supplier_id, name, email)
+    try:
+        new_supplier = Supplier(supplier_id, name, email)
+        inventory.add_supplier(new_supplier)
 
-    inventory.add_supplier(new_supplier)
-    inventory.save_to_file()
+        try:
+            inventory.save_to_file()
+            print("Supplier added successfully!")
 
-    print("Supplier added successfully!")
+        except OSError as error:
+            print(f"Supplier added, but saving failed: {error}")
+
+    except (ValueError, TypeError) as error:
+        print(f"Supplier could not be added: {error}")
 
 
+# Handles creating a new order.
 def handle_create_order(
     inventory: Inventory,
     orders: list[Order]
@@ -277,8 +298,19 @@ def handle_create_order(
         print("\nInventory is empty. Add products before creating an order.")
         return
 
-    order_id = input("Enter Order ID: ").strip()
-    new_order = Order(order_id)
+    # Validate order ID.
+    while True:
+        order_id = input("Enter Order ID: ").strip()
+
+        try:
+            new_order = Order(order_id)
+            break
+
+        except ValueError as error:
+            print(error)
+
+    # Track quantities already added for each product.
+    ordered_quantities: dict[int, int] = {}
 
     while True:
         inventory.display_all()
@@ -292,25 +324,52 @@ def handle_create_order(
 
         try:
             pid = int(pid_input)
-            product = inventory.search_product(pid)
+        except ValueError:
+            print("Please enter a valid product ID.")
+            continue
 
-            if not product:
-                print("Product ID not found.")
-                continue
+        product = inventory.search_product(pid)
 
+        if not product:
+            print("Product ID not found.")
+            continue
+
+        try:
             qty = int(input(f"Enter quantity for {product.name}: "))
+        except ValueError:
+            print("Please enter a valid quantity.")
+            continue
 
-            if qty <= 0:
-                print("Quantity must be greater than zero.")
-                continue
+        if qty <= 0:
+            print("Quantity must be greater than zero.")
+            continue
 
+        # Check the combined quantity for repeated product entries.
+        current_quantity = ordered_quantities.get(pid, 0)
+
+        if current_quantity + qty > product.stock:
+            available = product.stock - current_quantity
+            print(
+                f"Insufficient stock. Only {available} more "
+                f"unit(s) can be added to this order."
+            )
+            continue
+
+        try:
             # Order internally creates the OrderLine (Composition).
             new_order.add_order_line(product, qty)
 
+            ordered_quantities[pid] = current_quantity + qty
+
             print(f"Added {qty}x {product.name} to order.")
 
-        except ValueError:
-            print("Invalid input.")
+        except (ValueError, TypeError) as error:
+            print(f"Could not add product to order: {error}")
+
+    # Do not save an empty order.
+    if not new_order.order_lines:
+        print("No products were added. Order creation cancelled.")
+        return
 
     orders.append(new_order)
 
@@ -320,9 +379,17 @@ def handle_create_order(
     )
 
 
+# Main application.
 def main() -> None:
     inventory = Inventory()
-    inventory.load_from_file()
+
+    try:
+        inventory.load_from_file()
+
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(f"Could not load inventory: {error}")
+        print("Starting with an empty inventory.")
+        inventory = Inventory()
 
     orders: list[Order] = []
 
@@ -380,7 +447,11 @@ def main() -> None:
                     print(f"  Total: ${order.calculate_total():.2f}")
 
         elif option == "8":
-            inventory.save_to_file()
+            try:
+                inventory.save_to_file()
+
+            except OSError as error:
+                print(f"Could not save inventory: {error}")
 
         elif option == "9":
             print("Exiting System.")

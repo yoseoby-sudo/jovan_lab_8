@@ -1,5 +1,14 @@
 class Supplier:
     def __init__(self, supplier_id: str, name: str, contact_email: str):
+        if not isinstance(supplier_id, str) or not supplier_id.strip():
+            raise ValueError("Supplier ID cannot be empty.")
+
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Supplier name cannot be empty.")
+
+        if not isinstance(contact_email, str) or "@" not in contact_email:
+            raise ValueError("Please provide a valid supplier email.")
+
         self._supplier_id: str = supplier_id
         self._name: str = name
         self._contact_email: str = contact_email

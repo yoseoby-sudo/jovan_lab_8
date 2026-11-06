@@ -1,6 +1,6 @@
+import math
 from abc import ABC, abstractmethod
 from supplier import Supplier
-import math
 
 class Product(ABC):
     def __init__(self, product_id: int, name: str, price: float, stock: int, supplier: Supplier):
@@ -54,7 +54,7 @@ class Product(ABC):
             raise ValueError("Insufficient stock.")
 
         self._stock += quantity
-        
+
     @abstractmethod
     def get_fulfilment_info(self) -> str:
         pass

@@ -1,4 +1,4 @@
-
+import math
 from product import Product
 from shipping import CanBeShipped
 from supplier import Supplier
@@ -16,6 +16,10 @@ class PhysicalProduct(Product, CanBeShipped):
         supplier: Supplier
     ) -> None:
         super().__init__(product_id, name, price, stock, supplier)
+
+        if not isinstance(weight, (int, float)) or isinstance(weight, bool) or not math.isfinite(weight) or weight <= 0:
+            raise ValueError("Weight must be a valid positive number.")
+
         self._weight = weight
 
     @property
