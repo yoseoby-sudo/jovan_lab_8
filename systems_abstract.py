@@ -371,6 +371,28 @@ def handle_create_order(
         print("No products were added. Order creation cancelled.")
         return
 
+    # Deduct stock after the order is completed.
+    try:
+        for product_id, quantity in ordered_quantities.items():
+            product = inventory.search_product(product_id)
+
+            if product is None:
+                raise ValueError(
+                    f"Product {product_id} could not be found."
+                )
+
+            product.update_stock(-quantity)
+
+            # Record stock deduction in transaction history.
+            inventory.add_transaction(product_id, -quantity)
+
+        # Save updated inventory so deductions persist.
+        inventory.save_to_file()
+
+    except (ValueError, TypeError, OSError) as error:
+        print(f"Order could not be completed: {error}")
+        return
+
     orders.append(new_order)
 
     print(
