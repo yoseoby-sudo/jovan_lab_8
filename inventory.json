@@ -4,40 +4,49 @@
             "type": "physical",
             "id": 1,
             "name": "Keyboard",
-            "price": 2.0,
-            "stock": 15,
-            "weight": 100.0,
+            "price": 75.0,
+            "stock": 30,
+            "weight": 10.0,
             "supplier_id": "1"
         },
         {
             "type": "digital",
             "id": 2,
-            "name": "recipe book",
-            "price": 1.0,
+            "name": "Potato Digital Recipe",
+            "price": 25.0,
             "stock": 20,
-            "download_size": 50.0,
-            "supplier_id": "1"
+            "download_size": 500.0,
+            "supplier_id": "2"
         }
     ],
     "suppliers": [
         {
             "supplier_id": "1",
-            "name": "hexxor inc",
-            "contact_email": "hexxor@gmail.com"
+            "name": "Hexxor Inc.",
+            "contact_email": "hexxor@workmail.com"
+        },
+        {
+            "supplier_id": "2",
+            "name": "FreshCook Pte Ltd",
+            "contact_email": "freshcook@workmail.com"
         }
     ],
     "transaction_history": [
         {
             "product_id": 1,
-            "amount": 10
+            "amount": 50
         },
         {
             "product_id": 2,
-            "amount": 20
+            "amount": 30
         },
         {
             "product_id": 1,
-            "amount": 5
+            "amount": -20
+        },
+        {
+            "product_id": 2,
+            "amount": -10
         }
     ]
 }
